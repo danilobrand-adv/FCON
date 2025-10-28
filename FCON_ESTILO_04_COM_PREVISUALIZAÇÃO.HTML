@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>FERRAMENTAS DE CONTROLE E NORMATIVAS MUNICIPAIS (FCNM)</title>
+    <link rel="icon" href="https://raw.githubusercontent.com/google/material-design-icons/master/png/image_folder/materialicons/folder_black_48dp.png" type="image/png" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@700&display=swap" rel="stylesheet" />
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        law: {
+                            navy: "#0B1C3F",
+                            navy2: "#122553",
+                            gold: "#C8A356",
+                        },
+                        search: {
+                            dark: "#4a4a4a",
+                            active: "#00bcd4",
+                        },
+                    },
+                    boxShadow: {
+                        soft: "0 8px 24px rgba(0,0,0,.15)",
+                    },
+                    fontFamily: {
+                        inter: ["Inter", "system-ui", "sans-serif"],
+                        merri: ["Merriweather", "serif"],
+                    },
+                },
+            },
+        };
+    </script>
+    <style>
+        /* Estilos existentes */
+        body { font-family: "Inter", system-ui, sans-serif; }
+        th { padding-top: .75rem; padding-bottom: .75rem; text-align: center; }
+        td { padding-top: .75rem; padding-bottom: .75rem; text-align: left; }
+        col.col-ano { width: 5%; }
+        col.col-numero { width:5%; }
+        col.col-tipo { width: 25%; }
+        col.col-nome { width: 60%; }
+        col.col-link { width: 05%; }
+        .scroll-area::-webkit-scrollbar { width: 8px; height: 8px; }
+        .scroll-area::-webkit-scrollbar-track { background:#e5e7eb; border-radius:10px; }
+        .scroll-area::-webkit-scrollbar-thumb { background:#688696; border-radius:10px; }
+        .scroll-area::-webkit-scrollbar-thumb:hover { background:#eae47d; }
+        mark { background: #fde68a; padding: 0 .15em; border-radius: .2rem; }
+        .btn-category.active {
+            background-color: #C8A356;
+            color: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,.1);
+        }
+        .rotate-180 { transform: rotate(180deg); }
+        #resultsTableBody tr td:nth-child(1),
+        #resultsTableBody tr td:nth-child(2),
+        #resultsTableBody tr td:nth-child(5) { text-align: center; }
+        
+        /* Estilos para a barra de pesquisa recolhível */
+        #searchContainer {
+            display: flex;
+            align-items: center;
+            position: relative;
+            max-width: 60px;
+            height: 60px;
+            transition: max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s;
+            border-radius: 9999px;
+            background-color: #00bcd4; 
+            box-shadow: 0 4px 12px rgba(0,0,0,.2);
+            overflow: hidden;
+        }
+
+        #searchContainer.expanded {
+            max-width: 600px;
+            background-color: #4a4a4a;
+            box-shadow: 0 4px 15px rgba(0,0,0,.3);
+        }
+        
+        #searchButton {
+            flex-shrink: 0;
+            width: 60px;
+            height: 60px;
+            background-color: #00bcd4;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border: none;
+            border-radius: 9999px;
+            z-index: 20;
+            position: absolute;
+            right: 0;
+            top: 0;
+        }
+        
+        #searchButton:hover {
+            background-color: #57a420;
+        }
+
+        #searchNome {
+            flex-grow: 1;
+            background-color: transparent;
+            color: white;
+            padding: 1rem 1.5rem 1rem 1.5rem;
+            font-size: 1.125rem;
+            outline: none;
+            border: none;
+            width: 100%;
+            opacity: 0;
+            transition: opacity 0.2s ease-in 0.1s;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        #searchContainer.expanded #searchNome {
+            opacity: 1;
+            pointer-events: auto;
+            padding-right: 75px; 
+        }
+        #searchContainer.expanded #searchButton {
+            border-radius: 0 9999px 9999px 0;
+            left: auto;
+            right: 0;
+            background-color: #00bcd4;
+        }
+
+        #searchContainer.expanded #searchNome::placeholder {
+             color: rgba(255, 255, 255, 0.7);
+        }
+    </style>
+</head>
+
+<body class="min-h-full bg-slate-100 p-0 m-0">
+    <div class="bg-white p-6 sm:p-8 w-full h-full flex flex-col">
+        <div class="flex-shrink-0">
+            <div class="mb-6">
+                <h1 class="text-3xl sm:text-3xl font-bold text-center text-law-navy font-merri tracking-tight">
+                    <span class="inline-flex items-center gap-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-law-gold" viewBox="0 0 24 24" fill="currentColor"><path d="M10 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2h-8l-2-2z"></path></svg>
+                        FERRAMENTAS DE CONTROLE E NORMATIVAS MUNICIPAIS (FCNM)
+                    </span>
+                </h1>
+                <p class="text-center text-slate-600 text-sm mt-2">Busca rápida.</p>
+            </div>
+            
+            <div id="searchWrapper" class="mb-8 flex justify-center">
+                <div id="searchContainer">
+                    <input type="text" id="searchNome" placeholder="Faça sua Pesquisa" />
+                    <button id="searchButton" aria-label="Pesquisar">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div class="mb-6 text-center space-y-2">
+                <p id="loadingMessage" class="text-law-navy font-medium animate-pulse hidden">Carregando dados da planilha…</p>
+                <p id="errorMessage" class="text-red-600 font-medium hidden"></p>
+                <p id="localFileWarning" class="text-amber-700 text-sm p-2 bg-amber-50 rounded-lg border border-amber-200 hidden">
+                    ⚠️ Se você abriu este arquivo via <code>file://</code>, a busca pode não funcionar por CORS. Rode um servidor local (ex.: <code>python -m http.server</code>).
+                </p>
+            </div>
+
+            <div id="filterContainer" class="mb-6 border border-slate-200 rounded-xl shadow-soft bg-white p-4 sm:p-5">
+                <button id="toggleFiltersBtn" class="w-full flex justify-between items-center py-2 px-3 bg-law-navy text-white rounded-lg hover:bg-law-navy2 transition text-lg font-semibold tracking-wide">
+                    <span>🔍 Filtros de Documentos</span>
+                    <svg id="filterIcon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 transform transition-transform" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                </button>
+                
+                <div id="filterContent" class="mt-4 space-y-4 pt-4 border-t border-slate-200 hidden">
+                    <div class="pt-4 border-t border-slate-100">
+                        <label class="text-slate-700 text-sm font-semibold mb-2 block">Filtrar por Tipo de Documento:</label>
+                        <div id="categoryButtonsContainer" class="flex flex-wrap gap-2 justify-center sm:justify-start">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="resultsInfo" class="p-5 bg-slate-50 rounded-t-xl shadow-inner border border-slate-200 border-b-0">
+                <h2 class="text-lg sm:text-xl font-bold text-law-navy flex items-center gap-2 border-b pb-2 border-law-gold/50">
+                    <span>Resultados da pesquisa</span>
+                    <span class="text-slate-500 font-normal text-sm">(<span id="resultsCount">0</span> itens)</span>
+                </h2>
+                <div class="mt-3 flex flex-col sm:flex-row justify-between items-center gap-3">
+                    <div class="flex items-center gap-2">
+                        <label for="itemsPerPage" class="text-slate-700 text-sm font-semibold">Documentos por página:</label>
+                        <select id="itemsPerPage" class="p-2 border border-slate-300 rounded-md focus:ring-law-navy focus:border-law-navy transition shadow-sm">
+                            <option>10</option>
+                            <option>20</option>
+                            <option>50</option>
+                            <option>100</option>
+                        </select>
+                    </div>
+                    <div id="paginationControls" class="flex items-center gap-2 flex-wrap justify-center">
+                        <button id="startIndexPageBtn" class="bg-slate-200 hover:bg-slate-300 text-slate-900 font-semibold py-2 px-4 rounded-md transition text-sm disabled:opacity-50" disabled>Primeira</button>
+                        <button id="prevPageBtn" class="bg-slate-200 hover:bg-slate-300 text-slate-900 font-semibold py-2 px-4 rounded-md transition text-sm disabled:opacity-50" disabled>Anterior</button>
+                        <span id="pageInfo" class="text-slate-700 text-sm font-medium">Página 1 de 1</span>
+                        <button id="nextPageBtn" class="bg-slate-200 hover:bg-slate-300 text-slate-900 font-semibold py-2 px-4 rounded-md transition text-sm disabled:opacity-50" disabled>Próxima</button>
+                        <button id="endIndexPageBtn" class="bg-slate-200 hover:bg-slate-300 text-slate-900 font-semibold py-2 px-4 rounded-md transition text-sm disabled:opacity-50" disabled>Última</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="resultsTableContainer" class="scroll-area overflow-y-auto overflow-x-auto rounded-b-xl shadow-md border border-slate-200 flex-grow">
+            <table id="resultsTable" class="min-w-full table-fixed text-sm">
+                <colgroup>
+                    <col class="col-ano" />
+                    <col class="col-numero" />
+                    <col class="col-tipo" />
+                    <col class="col-nome" />
+                    <col class="col-link" />
+                </colgroup>
+                <thead class="sticky top-0 z-10">
+                    <tr>
+                        <th id="anoHeader" data-column="ano" class="bg-gradient-to-r from-law-navy to-law-navy2 text-white font-bold text-xs sm:text-sm uppercase tracking-wider rounded-tl-lg cursor-pointer transition-colors hover:bg-law-navy2">
+                            <div class="flex items-center justify-center gap-1">
+                                <span>Ano</span>
+                                <span class="sort-indicator text-white/70" data-column="ano"></span>
+                            </div>
+                        </th>
+                        <th id="numeroHeader" data-column="numero" class="bg-gradient-to-r from-law-navy to-law-navy2 text-white font-bold text-xs sm:text-sm uppercase tracking-wider cursor-pointer transition-colors hover:bg-law-navy2">
+                            <div class="flex items-center justify-center gap-1">
+                                <span>Número</span>
+                                <span class="sort-indicator text-white/70" data-column="numero"></span>
+                            </div>
+                        </th>
+                        <th class="bg-gradient-to-r from-law-navy to-law-navy2 text-white font-bold text-xs sm:text-sm uppercase tracking-wider">Tipo</th>
+                        <th id="nomeHeader" data-column="nome" class="bg-gradient-to-r from-law-navy to-law-navy2 text-white font-bold text-xs sm:text-sm uppercase tracking-wider cursor-pointer transition-colors hover:bg-law-navy2">
+                            <div class="flex items-center justify-center gap-1">
+                                <span>Nome do Arquivo</span>
+                                <span class="sort-indicator text-white/70" data-column="nome"></span>
+                            </div>
+                        </th>
+                        <th class="bg-gradient-to-r from-law-navy to-law-navy2 text-white font-bold text-xs sm:text-sm uppercase tracking-wider rounded-tr-lg">Ação</th> </tr>
+                </thead>
+                <tbody id="resultsTableBody">
+                    <tr>
+                        <td colspan="5" class="text-center text-slate-500 py-8 bg-white">
+                            Use os filtros ou a caixa de busca acima para encontrar documentos.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <p id="noResultsMessage" class="text-slate-600 text-center py-8 hidden bg-white rounded-b-lg">Nenhum arquivo encontrado.</p>
+        </div>
+    </div>
+
+    <div id="previewContainer" class="fixed inset-0 z-50 bg-black/70 hidden flex justify-center items-center p-4">
+        <div class="bg-white rounded-lg shadow-2xl w-full h-full max-w-7xl max-h-[90vh] flex flex-col relative">
+            
+            <button id="closePreviewBtn" class="absolute top-2 right-2 bg-red-600 text-white p-2 rounded-full z-10 hover:bg-red-700 transition shadow-lg" title="Fechar Pré-visualização">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+            </button>
+
+            <div id="previewHeader" class="p-3 border-b border-slate-200 flex-shrink-0">
+                <h3 id="previewTitle" class="text-lg font-semibold text-law-navy truncate pl-10 pr-10">Pré-visualização do Documento</h3>
+            </div>
+            
+            <iframe id="documentIframe" class="w-full flex-grow border-0 rounded-b-lg" frameborder="0" allowfullscreen></iframe>
+            
+            <div id="previewError" class="absolute inset-0 bg-white/95 hidden flex flex-col justify-center items-center text-center p-8 rounded-lg">
+                <p class="text-xl font-medium text-red-600 mb-4">🚫 Não foi possível carregar a pré-visualização.</p>
+                <p class="text-slate-600 mb-6">O arquivo pode não ser público, ter formato incompatível com o Google Drive, ou o link não está no formato correto.</p>
+                <a id="externalLinkBtn" target="_blank" class="bg-law-gold hover:bg-law-navy text-white font-semibold py-3 px-6 rounded-full transition shadow-md">
+                    Tentar Abrir em Nova Aba
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ... (Variáveis e Funções auxiliares inalteradas) ...
+        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTM3AukzEv8gQntYq_ouEIskBQELsx0YeHtq6Kwo_Tl0a3Om34MQKJ0IVz-HO5J4q7zhOxR_EQJGIZz/pub?gid=1483674210&single=true&output=csv';
+
+        let allData = [];
+        let filteredData = [];
+        let currentPage = 1;
+        let itemsPerPage = 10;
+        let columnMap = {};
+        
+        let sortOrder = "desc";
+        let sortColumn = "ano"; 
+        let activeCategory = ""; 
+        
+        let searchInitiated = true; 
+
+        // Referências ao DOM (Atualizadas com novos elementos de preview)
+        const searchNomeInput = document.getElementById('searchNome');
+        const searchButton = document.getElementById('searchButton');
+        const searchContainer = document.getElementById('searchContainer');
+        const categoryButtonsContainer = document.getElementById('categoryButtonsContainer');
+        const resultsTableBody = document.getElementById('resultsTableBody');
+        const resultsCountSpan = document.getElementById('resultsCount');
+        const noResultsMessage = document.getElementById('noResultsMessage');
+        const loadingMessage = document.getElementById('loadingMessage');
+        const errorMessage = document.getElementById('errorMessage');
+        const localFileWarning = document.getElementById("localFileWarning");
+        const itemsPerPageSelect = document.getElementById('itemsPerPage');
+        const startIndexPageBtn = document.getElementById("startIndexPageBtn");
+        const prevPageBtn = document.getElementById('prevPageBtn');
+        const nextPageBtn = document.getElementById('nextPageBtn');
+        const endIndexPageBtn = document.getElementById("endIndexPageBtn");
+        const pageInfoSpan = document.getElementById('pageInfo');
+        
+        const anoHeader = document.getElementById("anoHeader");
+        const numeroHeader = document.getElementById("numeroHeader");
+        const nomeHeader = document.getElementById("nomeHeader");
+        const sortIndicators = document.querySelectorAll(".sort-indicator");
+        
+        const toggleFiltersBtn = document.getElementById('toggleFiltersBtn');
+        const filterContent = document.getElementById('filterContent');
+        const filterIcon = document.getElementById('filterIcon');
+
+        // NOVAS REFERÊNCIAS PARA A PRÉ-VISUALIZAÇÃO
+        const previewContainer = document.getElementById('previewContainer');
+        const closePreviewBtn = document.getElementById('closePreviewBtn');
+        const documentIframe = document.getElementById('documentIframe');
+        const previewTitle = document.getElementById('previewTitle');
+        const previewError = document.getElementById('previewError');
+        const externalLinkBtn = document.getElementById('externalLinkBtn');
+
+        const escapeHTML = (str = "") =>
+            str.replace(/[&<>"'`=\/]/g, s => ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;","/":"&#x2F;","`":"&#x60;","=":"&#x3D;" }[s]));
+
+        const normalize = (s = "") =>
+            s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+
+        const highlight = (text = "", query = "") => {
+            if (!query) return text;
+            const q = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+            return text.replace(new RegExp(`(${q})`, "gi"), "<mark>$1</mark>");
+        };
+
+        function showErrorMessage(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.remove("hidden");
+            loadingMessage.classList.add("hidden");
+            noResultsMessage.classList.add("hidden");
+        }
+        function hideErrorMessage() { errorMessage.classList.add("hidden"); }
+
+        function csvParaJSON(csv) {
+            const linhas = csv.split("\n").map(l => l.replace(/\r$/, "").trim()).filter(Boolean);
+            if (!linhas.length) return [];
+            
+            const headerIndex = linhas.findIndex(l =>
+                l.toLowerCase().split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/)
+                .some(col => col.trim().toLowerCase() === "ano")
+            );
+            if (headerIndex === -1) return [];
+
+            const headersRaw = linhas[headerIndex].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+            const headers = headersRaw.map(h => h.replace(/^"|"$/g, "").trim().toLowerCase());
+
+            columnMap = {
+                ano: headers.find(h => h === "ano"),
+                numero: headers.find(h => h === "número" || h === "numero"),
+                tipo: headers.find(h => h === "tipo documento padrão"),
+                nome: headers.find(h => h === "nome"),
+                link: headers.find(h => h === "link"),
+            };
+
+            const data = linhas.slice(headerIndex + 1).map(l => {
+                const vals = l.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                const obj = {};
+                headers.forEach((col, i) => { obj[col] = vals[i] ? vals[i].replace(/^"|"$/g, "").trim() : ""; });
+                return obj;
+            });
+
+            const requiredColumns = [columnMap.ano, columnMap.numero, columnMap.tipo, columnMap.nome, columnMap.link];
+            if (requiredColumns.some(c => !c)) {
+                showErrorMessage("As colunas 'ANO', 'NÚMERO', 'TIPO DOCUMENTO PADRÃO', 'NOME' ou 'LINK' não foram encontradas na planilha.");
+                return [];
+            }
+            return data.filter(row => row[columnMap.tipo] !== 'PASTA');
+        }
+
+        async function carregarDados() {
+            loadingMessage.classList.remove("hidden");
+            hideErrorMessage();
+            resultsCountSpan.textContent = "0";
+            noResultsMessage.classList.add("hidden");
+
+            if (window.location.protocol === "file:") {
+                localFileWarning.classList.remove("hidden");
+            } else {
+                localFileWarning.classList.add("hidden");
+            }
+
+            try {
+                const resposta = await fetch(SHEET_URL);
+                if (!resposta.ok) {
+                    throw new Error(`Erro de rede: ${resposta.status} ${resposta.statusText}`);
+                }
+                const rawCsvText = await resposta.text();
+                allData = csvParaJSON(rawCsvText);
+                
+                criarBotoesDeCategoria(); 
+                
+                if (allData.length > 0) {
+                     searchInitiated = true; 
+                     buscarDados(); 
+                }
+                
+            } catch (error) {
+                console.error("Erro ao carregar dados:", error);
+                showErrorMessage(`Falha ao carregar a planilha: ${error.message}.`);
+                resultsTableBody.innerHTML = `<tr><td colspan="5" class="text-center text-red-600 py-4">Erro ao carregar dados.</td></tr>`;
+            } finally {
+                loadingMessage.classList.add("hidden");
+            }
+            
+            if (window.innerWidth >= 1024) { 
+                filterContent.classList.remove('hidden');
+                filterIcon.classList.add('rotate-180');
+            }
+        }
+        
+        function criarBotaoCategoria(label, value) {
+            const button = document.createElement("button");
+            button.textContent = label;
+            button.value = value;
+            button.className = "btn-category bg-slate-200 hover:bg-law-gold/80 text-slate-800 hover:text-white font-semibold py-2 px-4 rounded-full transition text-sm whitespace-nowrap";
+            
+            button.addEventListener("click", () => {
+                // Remove o estilo ativo de todos os botões
+                document.querySelectorAll(".btn-category").forEach(btn => {
+                    btn.classList.remove("active", "bg-law-gold", "text-white");
+                    btn.classList.add("bg-slate-200", "text-slate-800");
+                });
+                
+                // Adiciona o estilo ativo ao botão clicado
+                button.classList.add("active", "bg-law-gold", "text-white");
+                button.classList.remove("bg-slate-200", "text-slate-800");
+                
+                activeCategory = value;
+                currentPage = 1; 
+                
+                sortColumn = "ano";
+                sortOrder = "desc";
+                
+                searchInitiated = true; 
+                buscarDados();
+            });
+            return button;
+        }
+
+        function criarBotoesDeCategoria() {
+            if (!columnMap.tipo) return;
+            categoryButtonsContainer.innerHTML = '';
+
+            const tipos = [...new Set(allData.map(it => it[columnMap.tipo]).filter(Boolean))].sort((a,b)=> a.localeCompare(b));
+            
+            const btnTodos = criarBotaoCategoria("Todos os Documentos", "");
+            categoryButtonsContainer.appendChild(btnTodos);
+            
+            tipos.forEach(tipo => {
+                const btn = criarBotaoCategoria(tipo, tipo);
+                categoryButtonsContainer.appendChild(btn);
+            });
+            
+            document.querySelector(".btn-category[value='']").classList.add("active", "bg-law-gold", "text-white");
+        }
+
+        const buscarDados = () => {
+            const tipoQuery = normalize(activeCategory); 
+            const nomeQuery = normalize(searchNomeInput.value); 
+
+            filteredData = allData.filter(item => {
+                const ano = normalize(String(item[columnMap.ano] || ""));
+                const numero = normalize(String(item[columnMap.numero] || ""));
+                const tipo = normalize(String(item[columnMap.tipo] || ""));
+                const nome = normalize(String(item[columnMap.nome] || ""));
+                const allText = `${nome} ${numero} ${ano}`;
+
+                const tipoOk = !tipoQuery || tipo === tipoQuery;
+                const nomeOk = !nomeQuery || allText.includes(nomeQuery);
+
+                return tipoOk && nomeOk;
+            });
+            
+            currentPage = 1;
+            
+            if (!activeCategory && searchNomeInput.value && sortColumn !== "ano") {
+                sortColumn = "ano";
+                sortOrder = "desc";
+            }
+            
+            ordenarDados(sortColumn, sortOrder); 
+        };
+        
+        function ordenarDados(column, order) {
+            if (!columnMap[column]) return;
+            
+            if (column !== sortColumn) {
+                sortColumn = column;
+                sortOrder = (column === "ano" || column === "numero") ? "desc" : "asc"; 
+            } else if (order === undefined) { 
+                sortOrder = sortOrder === "asc" ? "desc" : "asc";
+            } else {
+                sortOrder = order;
+            }
+
+            filteredData.sort((a, b) => {
+                const A_raw = String(a[columnMap[sortColumn]] || "").toLowerCase();
+                const B_raw = String(b[columnMap[sortColumn]] || "").toLowerCase();
+
+                let result;
+                if (sortColumn === "ano" || sortColumn === "numero") {
+                    const A = parseInt(A_raw, 10) || 0;
+                    const B = parseInt(B_raw, 10) || 0;
+                    result = A - B;
+                } else {
+                    result = A_raw.localeCompare(B_raw, 'pt-BR');
+                }
+
+                return sortOrder === "asc" ? result : -result;
+            });
+            exibirDadosPaginados();
+        }
+
+        function updateSortIndicators() {
+            sortIndicators.forEach(indicator => {
+                const column = indicator.getAttribute('data-column');
+                indicator.textContent = "";
+                if (column === sortColumn && filteredData.length > 0) {
+                    indicator.textContent = sortOrder === "asc" ? "▲" : "▼";
+                }
+            });
+        }
+
+
+        function exibirDadosPaginados() {
+            resultsTableBody.innerHTML = "";
+            
+            if (allData.length === 0 || (!searchInitiated && searchNomeInput.value === '' && activeCategory === '')) {
+                resultsCountSpan.textContent = "0";
+                noResultsMessage.classList.add("hidden"); 
+                resultsTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="text-center text-slate-500 py-8 bg-white">
+                            Use os filtros ou a caixa de busca acima para encontrar documentos.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            noResultsMessage.classList.add("hidden");
+            const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
+            currentPage = Math.max(1, Math.min(currentPage, totalPages)); 
+            pageInfoSpan.textContent = `Página ${currentPage} de ${totalPages}`;
+            
+            const isFirst = currentPage === 1 || !filteredData.length;
+            const isLast  = currentPage === totalPages || !filteredData.length;
+            
+            startIndexPageBtn.disabled = isFirst;
+            prevPageBtn.disabled = isFirst;
+            nextPageBtn.disabled = isLast;
+            endIndexPageBtn.disabled  = isLast;
+            
+            updateSortIndicators(); 
+            
+            if (!filteredData.length) {
+                resultsCountSpan.textContent = "0";
+                noResultsMessage.classList.remove("hidden");
+                return;
+            }
+            
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const pageItems = filteredData.slice(start, end);
+            
+            const nomeQuery = searchNomeInput.value; 
+            
+            pageItems.forEach((item, idx) => {
+                const ano = escapeHTML(String(item[columnMap.ano] || ""));
+                const numero = escapeHTML(String(item[columnMap.numero] || ""));
+                const tipo = escapeHTML(String(item[columnMap.tipo] || ""));
+                const nome = escapeHTML(String(item[columnMap.nome] || ""));
+                const link = item[columnMap.link] || "#";
+                
+                const tr = document.createElement("tr");
+                tr.className = idx % 2 === 0 ? "bg-white hover:bg-amber-100 transition-colors" : "bg-slate-50 hover:bg-amber-100 transition-colors";
+                
+                const highlightedAno = highlight(ano, nomeQuery);
+                const highlightedNumero = highlight(numero, nomeQuery);
+                const highlightedNome = highlight(nome, nomeQuery);
+                
+                // NOVO: Lógica para decidir quais botões mostrar
+                const embedUrl = convertToEmbedUrl(link);
+                const isEmbeddable = embedUrl && embedUrl !== link; // Verifica se o link foi transformado para embed
+                
+                tr.innerHTML = `
+                    <td class="font-bold text-slate-900 pr-2">${highlightedAno}</td>
+                    <td class="text-slate-800 px-2">${highlightedNumero}</td>
+                    <td class="text-slate-800 px-2">${tipo}</td>
+                    <td class="text-slate-800 px-2 break-words text-left">${highlightedNome}</td>
+                    <td class="pl-2 pr-4">
+                    <div class="flex gap-2 justify-center">
+                        
+                        ${isEmbeddable 
+                            ? `<button data-link="${link}" data-title="${nome}" class="preview-btn inline-flex items-center justify-center gap-2 bg-law-gold hover:bg-law-gold/90 text-white font-semibold py-2 px-4 rounded-md shadow-sm hover:shadow-md transition text-xs sm:text-sm w-full">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" /></svg>
+                                    <span class="hidden sm:inline">Visualizar</span> 
+                                </button>`
+                            : ''
+                        }
+                       
+
+                        <a href="${link}" target="_blank" class="inline-flex items-center justify-center gap-2 bg-law-navy hover:bg-law-navy2 text-white font-semibold py-2 px-4 rounded-md shadow-sm hover:shadow-md transition text-xs sm:text-sm w-full ${isEmbeddable ? 'bg-opacity-80' : ''}">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L14.414 5A2 2 0 0115 6.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1-3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" />
+                            </svg>
+                            <span class="hidden sm:inline">${isEmbeddable ? 'Abrir' : 'Acessar'}</span>
+                        </a>
+                    </td>
+                `;
+                resultsTableBody.appendChild(tr);
+            });
+            resultsCountSpan.textContent = filteredData.length;
+            resultsTableBody.parentElement.scrollTop = 0;
+        }
+
+        // NOVO: Função para converter URL do Drive para Embed
+        function convertToEmbedUrl(link) {
+            if (!link || typeof link !== 'string') return null;
+            
+            // Padrão 1: /open?id=ID_DO_ARQUIVO ou /file/d/ID_DO_ARQUIVO/view
+            const match1 = link.match(/id=([a-zA-Z0-9_-]+)/) || link.match(/\/d\/([a-zA-Z0-9_-]+)/);
+            
+            if (match1 && match1[1]) {
+                const fileId = match1[1];
+                // Formato de embed do Google Drive
+                return `https://drive.google.com/file/d/${fileId}/preview`;
+            }
+
+            // Retorna o link original se não for um formato reconhecido do Drive
+            return link; 
+        }
+
+        // NOVO: Função para abrir a Pré-visualização
+        function openPreview(link, title) {
+            const embedUrl = convertToEmbedUrl(link);
+            
+            previewTitle.textContent = title || "Pré-visualização do Documento";
+            previewError.classList.add('hidden'); 
+            documentIframe.src = ""; 
+            
+            // Verifica se a conversão foi bem sucedida antes de carregar o iframe
+            if (embedUrl !== link) {
+                 documentIframe.src = embedUrl;
+            } else {
+                // Se não conseguir gerar o embed, mostra a mensagem de erro/fallback
+                previewError.classList.remove('hidden');
+            }
+
+            previewContainer.classList.remove('hidden');
+
+            // Adiciona o link original ao botão de link externo em caso de falha de carregamento ou não-embeddable
+            externalLinkBtn.href = link;
+        }
+
+        // NOVO: Adiciona o Listener para os Botões de Pré-visualização
+        function addPreviewListeners() {
+            document.querySelectorAll('.preview-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const link = e.currentTarget.getAttribute('data-link');
+                    const title = e.currentTarget.getAttribute('data-title');
+                    if (link) {
+                        openPreview(link, title);
+                    }
+                });
+            });
+        }
+
+        // Sobrescreve a função para garantir que os listeners sejam adicionados a cada atualização
+        const originalExibirDadosPaginados = exibirDadosPaginados;
+        exibirDadosPaginados = function() {
+            originalExibirDadosPaginados();
+            addPreviewListeners(); 
+        };
+
+        // NOVO: Listener para Fechar a Pré-visualização (Botão X)
+        closePreviewBtn.addEventListener('click', () => {
+            previewContainer.classList.add('hidden');
+            documentIframe.src = ""; // Para parar o carregamento
+        });
+
+        // NOVO: Permite fechar a preview clicando no overlay
+        previewContainer.addEventListener('click', (e) => {
+            if (e.target === previewContainer) {
+                previewContainer.classList.add('hidden');
+                documentIframe.src = "";
+            }
+        });
+        
+        // --- Lógica para a barra de pesquisa recolhível (Inalterada) ---
+        function expandSearch() {
+            searchContainer.classList.add('expanded');
+            searchNomeInput.focus();
+        }
+
+        function collapseSearch() {
+            if (searchNomeInput.value === '') {
+                searchContainer.classList.remove('expanded');
+            }
+        }
+        
+        searchButton.addEventListener('click', () => {
+            if (!searchContainer.classList.contains('expanded')) {
+                expandSearch();
+            } else {
+                if (searchNomeInput.value !== '') {
+                    searchInitiated = true;
+                    buscarDados();
+                } else {
+                    collapseSearch();
+                }
+            }
+        });
+
+        searchNomeInput.addEventListener('input', () => {
+            if (searchNomeInput.value.trim() !== '' || activeCategory !== '') {
+                searchInitiated = true;
+            } else {
+                searchInitiated = false; 
+            }
+            buscarDados();
+        });
+
+        searchNomeInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                if (searchNomeInput.value.trim() !== '') {
+                    searchInitiated = true;
+                    buscarDados();
+                } else {
+                    collapseSearch();
+                }
+            }
+        });
+        searchNomeInput.addEventListener('blur', collapseSearch); 
+
+        // --- Lógica de Paginação e Filtros (Inalterada) ---
+        itemsPerPageSelect.addEventListener('change', (e) => {
+            itemsPerPage = parseInt(e.target.value);
+            currentPage = 1; 
+            exibirDadosPaginados();
+        });
+
+        prevPageBtn.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                exibirDadosPaginados();
+            }
+        });
+
+        nextPageBtn.addEventListener('click', () => {
+            const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                exibirDadosPaginados();
+            }
+        });
+        
+        startIndexPageBtn.addEventListener('click', () => {
+            currentPage = 1;
+            exibirDadosPaginados();
+        });
+        
+        endIndexPageBtn.addEventListener('click', () => {
+            currentPage = Math.ceil(filteredData.length / itemsPerPage);
+            exibirDadosPaginados();
+        });
+
+
+        // Listeners para cabeçalhos de coluna
+        document.querySelectorAll('th[data-column]').forEach(header => {
+            header.addEventListener('click', (e) => {
+                const column = e.currentTarget.getAttribute('data-column');
+                // Se for a mesma coluna, inverte a ordem, caso contrário, usa o padrão.
+                const order = (column === sortColumn) ? (sortOrder === "asc" ? "desc" : "asc") : undefined;
+                ordenarDados(column, order);
+            });
+        });
+
+        // Toggle de Filtros
+        toggleFiltersBtn.addEventListener('click', () => {
+            const isHidden = filterContent.classList.contains('hidden');
+            if (isHidden) {
+                filterContent.classList.remove('hidden');
+                filterIcon.classList.add('rotate-180');
+            } else {
+                filterContent.classList.add('hidden');
+                filterIcon.classList.remove('rotate-180');
+            }
+        });
+
+
+        // Início da aplicação
+        carregarDados();
+
+    </script>
+</body>
+</html>
